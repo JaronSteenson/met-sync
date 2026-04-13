@@ -50,6 +50,11 @@ function registerServiceWorker() {
   }
 }
 
+function setSetupVisibility(isVisible) {
+  setupMessage.hidden = !isVisible;
+  setupMessage.style.display = isVisible ? '' : 'none';
+}
+
 function loadSettings() {
   const apiKey = getStoredValue(STORAGE_KEYS.apiKey);
   const stops = [];
@@ -287,7 +292,7 @@ async function fetchStopArrivals(apiKey, stop) {
 async function refreshStops() {
   const { apiKey, stops, hasConfiguredStop } = loadSettings();
 
-  setupMessage.hidden = Boolean(apiKey && hasConfiguredStop);
+  setSetupVisibility(!(apiKey && hasConfiguredStop));
 
   if (!apiKey || stops.length === 0) {
     stopsContainer.innerHTML = '';
@@ -347,5 +352,6 @@ registerServiceWorker();
 refreshStops().catch(() => {
   setStatus('The page could not start. Open Settings and save again, then retry.', 'status-error');
   lastUpdated.textContent = 'Updated not yet';
+  setSetupVisibility(true);
   refreshButton.disabled = false;
 });
