@@ -227,6 +227,10 @@ input {
   justify-items: center;
 }
 
+.setup-message {
+  padding: 1.5rem 1rem;
+}
+
 .settings-form,
 .stops-fields {
   display: grid;

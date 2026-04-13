@@ -205,7 +205,7 @@ function renderStop(stop, arrivals) {
       <li class="arrival-row">
         <span class="arrival-service">${escapeHtml(getServiceLabel(arrival))}</span>
         <span class="arrival-times">
-          <span class="arrival-label">Exp</span> ${escapeHtml(formatTime(expected, 'n/a'))}
+          <span class="arrival-label">Expected</span> ${escapeHtml(formatTime(expected, 'n/a'))}
           <span class="arrival-separator">·</span>
           <span class="arrival-label">Plan</span> ${escapeHtml(formatTime(planned, expected ? formatTime(expected, 'n/a') : 'n/a'))}
         </span>
@@ -227,8 +227,9 @@ function renderStop(stop, arrivals) {
 }
 
 function setStatus(message, className) {
-  statusMessage.textContent = message;
+  statusMessage.textContent = message || '';
   statusMessage.className = 'status';
+  statusMessage.hidden = !message;
 
   if (className) {
     statusMessage.classList.add(className);
@@ -321,7 +322,11 @@ async function refreshStops() {
 
   if (successCount > 0) {
     lastUpdated.textContent = `Last updated: ${timestampFormatter.format(new Date())}`;
-    setStatus(successCount === results.length ? 'Live arrivals loaded.' : 'Loaded with some stop errors.', successCount === results.length ? 'status-ok' : 'status-error');
+    if (successCount === results.length) {
+      setStatus('');
+    } else {
+      setStatus('Loaded with some stop errors.', 'status-error');
+    }
   } else {
     setStatus('Could not load any stops. Check your API key and stop IDs.', 'status-error');
   }

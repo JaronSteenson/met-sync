@@ -1,8 +1,8 @@
 {
-  "name": "Metlink Quick Stops",
-  "short_name": "Quick Stops",
+  "name": "Met-sync",
+  "short_name": "Met-sync",
   "description": "Fast mobile view of five saved Metlink stops.",
-  "start_url": "./index.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#101418",

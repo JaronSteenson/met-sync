@@ -1,6 +1,8 @@
-# Metlink Quick Stops
+# Met-sync
 
 Small static PWA for checking five favourite Wellington Metlink stops on a phone.
+
+Live site: https://jaronsteenson.github.io/met-sync/
 
 Register for a Metlink Open Data API token at https://opendata.metlink.org.nz/apis and enter it on the app's Settings page.
 
@@ -38,7 +40,7 @@ Saved values live in `localStorage` using these keys:
 3. In GitHub, open `Settings` -> `Pages`.
 4. Set the source to `GitHub Actions`.
 5. Push again if needed, then wait for the `Deploy static site to GitHub Pages` workflow to finish.
-6. Visit the published site URL and open `settings.html` to add your API key and stops.
+6. Visit https://jaronsteenson.github.io/met-sync/ and open `settings.html` to add your API key and stops.
 
 Extra Pages files included:
 

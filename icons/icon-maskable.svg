@@ -1,6 +1,6 @@
 <!-- Placeholder maskable icon. Replace with a real 512x512 maskable icon later if you want. -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
-  <title id="title">Metlink Quick Stops maskable icon</title>
+  <title id="title">Met-sync maskable icon</title>
   <desc id="desc">Simple placeholder maskable icon for the static PWA.</desc>
   <rect width="512" height="512" fill="#101418"/>
   <circle cx="256" cy="256" r="184" fill="#171d23" stroke="#6dd3fb" stroke-width="28"/>

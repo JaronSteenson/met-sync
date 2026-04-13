@@ -1,6 +1,6 @@
 <!-- Placeholder icon. Replace with a real 192x192 app icon later if you want. -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-labelledby="title desc">
-  <title id="title">Metlink Quick Stops icon</title>
+  <title id="title">Met-sync icon</title>
   <desc id="desc">Simple placeholder icon for the static PWA.</desc>
   <rect width="192" height="192" rx="38" fill="#101418"/>
   <rect x="24" y="28" width="144" height="136" rx="24" fill="#171d23" stroke="#6dd3fb" stroke-width="8"/>
