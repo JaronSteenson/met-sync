@@ -53,17 +53,22 @@ function registerServiceWorker() {
 function loadSettings() {
   const apiKey = getStoredValue(STORAGE_KEYS.apiKey);
   const stops = [];
+  let hasConfiguredStop = false;
 
   for (let index = 1; index <= MAX_STOPS; index += 1) {
     const name = getStoredValue(`${STORAGE_KEYS.stopNamePrefix}${index}`);
     const stopId = getStoredValue(`${STORAGE_KEYS.stopIdPrefix}${index}`);
+
+    if (name || stopId) {
+      hasConfiguredStop = true;
+    }
 
     if (name && stopId) {
       stops.push({ name, stopId });
     }
   }
 
-  return { apiKey, stops };
+  return { apiKey, stops, hasConfiguredStop };
 }
 
 function getExpectedTime(arrival) {
@@ -136,7 +141,7 @@ function formatTime(value, fallbackText) {
     return fallbackText;
   }
 
-  return timeFormatter.format(date).replace(/ am/i, 'a').replace(/ pm/i, 'p');
+  return timeFormatter.format(date).replace(/\s?(am|pm)/i, (_, meridiem) => meridiem.toLowerCase());
 }
 
 function getServiceLabel(arrival) {
@@ -207,7 +212,7 @@ function renderStop(stop, arrivals) {
         <span class="arrival-times">
           <span class="arrival-label">Expected</span> ${escapeHtml(formatTime(expected, 'n/a'))}
           <span class="arrival-separator">·</span>
-          <span class="arrival-label">Plan</span> ${escapeHtml(formatTime(planned, expected ? formatTime(expected, 'n/a') : 'n/a'))}
+          <span class="arrival-label">Planned</span> ${escapeHtml(formatTime(planned, expected ? formatTime(expected, 'n/a') : 'n/a'))}
         </span>
       </li>
     `;
@@ -280,18 +285,18 @@ async function fetchStopArrivals(apiKey, stop) {
 }
 
 async function refreshStops() {
-  const { apiKey, stops } = loadSettings();
+  const { apiKey, stops, hasConfiguredStop } = loadSettings();
+
+  setupMessage.hidden = Boolean(apiKey && hasConfiguredStop);
 
   if (!apiKey || stops.length === 0) {
     stopsContainer.innerHTML = '';
-    setupMessage.hidden = false;
     refreshButton.disabled = true;
     setStatus('Add your API key and at least one stop in Settings.', 'status-error');
-    lastUpdated.textContent = 'Last updated: not yet';
+    lastUpdated.textContent = 'Updated not yet';
     return;
   }
 
-  setupMessage.hidden = true;
   refreshButton.disabled = true;
   setStatus('Refreshing…');
 
@@ -321,7 +326,7 @@ async function refreshStops() {
   const successCount = results.filter((result) => !result.error).length;
 
   if (successCount > 0) {
-    lastUpdated.textContent = `Last updated: ${timestampFormatter.format(new Date())}`;
+    lastUpdated.textContent = `Updated ${timestampFormatter.format(new Date())}`;
     if (successCount === results.length) {
       setStatus('');
     } else {
@@ -341,5 +346,6 @@ refreshButton.addEventListener('click', () => {
 registerServiceWorker();
 refreshStops().catch(() => {
   setStatus('The page could not start. Open Settings and save again, then retry.', 'status-error');
+  lastUpdated.textContent = 'Updated not yet';
   refreshButton.disabled = false;
 });

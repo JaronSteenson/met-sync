@@ -19,24 +19,24 @@
         <h1>Favourite stops</h1>
       </div>
       <nav class="topbar-actions" aria-label="Primary">
-        <a class="button button-secondary" href="./settings.html">Settings</a>
+        <a class="button button-secondary" href="/settings">Settings</a>
       </nav>
     </header>
 
     <section class="panel panel-tight">
       <div class="toolbar">
         <button id="refreshButton" class="button" type="button">Refresh</button>
-        <p id="lastUpdated" class="meta" aria-live="polite">Last updated: not yet</p>
+        <p id="lastUpdated" class="meta" aria-live="polite">Updated not yet</p>
       </div>
       <p id="statusMessage" class="status" aria-live="polite">Loading stops…</p>
     </section>
 
-    <section id="stopsContainer" class="stops-list" aria-live="polite"></section>
+    <section id="stopsContainer" class="stops-list panel-tight" aria-live="polite"></section>
 
     <section id="setupMessage" class="panel empty-state setup-message" hidden>
       <h2>Set up your stops</h2>
       <p>Add your Metlink API key and up to five favourite stops in Settings. Register for a token at <a href="https://opendata.metlink.org.nz/apis" target="_blank" rel="noreferrer">opendata.metlink.org.nz/apis</a>.</p>
-      <a class="button" href="./settings.html">Open settings</a>
+      <a class="button" href="/settings">Open settings</a>
     </section>
   </main>
 
