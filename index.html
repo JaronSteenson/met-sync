@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101418">
+  <meta name="description" content="Quick Metlink stop checker for five favourite Wellington stops.">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./icons/icon-192.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icons/icon-192.svg">
+  <link rel="stylesheet" href="./styles.css">
+  <title>Metlink Quick Stops</title>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Metlink Quick Stops</p>
+        <h1>Favourite stops</h1>
+      </div>
+      <nav class="topbar-actions" aria-label="Primary">
+        <a class="button button-secondary" href="./settings.html">Settings</a>
+      </nav>
+    </header>
+
+    <section class="panel panel-tight">
+      <div class="toolbar">
+        <button id="refreshButton" class="button" type="button">Refresh</button>
+        <p id="lastUpdated" class="meta" aria-live="polite">Last updated: not yet</p>
+      </div>
+      <p id="statusMessage" class="status" aria-live="polite">Loading stops…</p>
+    </section>
+
+    <section id="stopsContainer" class="stops-list" aria-live="polite"></section>
+
+    <section id="setupMessage" class="panel empty-state" hidden>
+      <h2>Set up your stops</h2>
+      <p>Add your Metlink API key and up to five favourite stops in Settings. Register for a token at <a href="https://opendata.metlink.org.nz/apis" target="_blank" rel="noreferrer">opendata.metlink.org.nz/apis</a>.</p>
+      <a class="button" href="./settings.html">Open settings</a>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>

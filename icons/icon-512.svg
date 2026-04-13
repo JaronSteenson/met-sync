@@ -1,0 +1,13 @@
+<!-- Placeholder icon. Replace with a real 512x512 app icon later if you want. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Metlink Quick Stops icon</title>
+  <desc id="desc">Simple placeholder icon for the static PWA.</desc>
+  <rect width="512" height="512" rx="104" fill="#101418"/>
+  <rect x="72" y="84" width="368" height="344" rx="56" fill="#171d23" stroke="#6dd3fb" stroke-width="22"/>
+  <circle cx="162" cy="182" r="26" fill="#6dd3fb"/>
+  <circle cx="162" cy="256" r="26" fill="#6dd3fb"/>
+  <circle cx="162" cy="330" r="26" fill="#6dd3fb"/>
+  <rect x="224" y="160" width="152" height="28" rx="14" fill="#f2f5f7"/>
+  <rect x="224" y="234" width="118" height="28" rx="14" fill="#f2f5f7"/>
+  <rect x="224" y="308" width="170" height="28" rx="14" fill="#f2f5f7"/>
+</svg>

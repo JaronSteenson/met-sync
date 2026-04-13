@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101418">
+  <meta name="description" content="Settings for Metlink Quick Stops.">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./icons/icon-192.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icons/icon-192.svg">
+  <link rel="stylesheet" href="./styles.css">
+  <title>Metlink Quick Stops Settings</title>
+</head>
+<body>
+  <main class="app-shell app-shell-form">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Metlink Quick Stops</p>
+        <h1>Settings</h1>
+      </div>
+      <nav class="topbar-actions" aria-label="Primary">
+        <a class="button button-secondary" href="./index.html">Back</a>
+      </nav>
+    </header>
+
+    <section class="panel">
+      <p class="helper-text">Add your Metlink Open Data API token and your five favourite stop names and IDs. Get a token at <a href="https://opendata.metlink.org.nz/apis" target="_blank" rel="noreferrer">opendata.metlink.org.nz/apis</a>.</p>
+
+      <form id="settingsForm" class="settings-form">
+        <div class="field-group">
+          <label class="field-label" for="apiKey">Metlink API key</label>
+          <input id="apiKey" name="apiKey" class="text-input" type="text" autocomplete="off" spellcheck="false">
+        </div>
+
+        <div class="stops-fields">
+          <div class="stop-form-row">
+            <h2>Stop 1</h2>
+            <label class="field-label" for="stopName1">Stop name</label>
+            <input id="stopName1" name="stopName1" class="text-input" type="text" autocomplete="off">
+            <label class="field-label" for="stopId1">Stop ID</label>
+            <input id="stopId1" name="stopId1" class="text-input" type="text" autocomplete="off" spellcheck="false">
+          </div>
+
+          <div class="stop-form-row">
+            <h2>Stop 2</h2>
+            <label class="field-label" for="stopName2">Stop name</label>
+            <input id="stopName2" name="stopName2" class="text-input" type="text" autocomplete="off">
+            <label class="field-label" for="stopId2">Stop ID</label>
+            <input id="stopId2" name="stopId2" class="text-input" type="text" autocomplete="off" spellcheck="false">
+          </div>
+
+          <div class="stop-form-row">
+            <h2>Stop 3</h2>
+            <label class="field-label" for="stopName3">Stop name</label>
+            <input id="stopName3" name="stopName3" class="text-input" type="text" autocomplete="off">
+            <label class="field-label" for="stopId3">Stop ID</label>
+            <input id="stopId3" name="stopId3" class="text-input" type="text" autocomplete="off" spellcheck="false">
+          </div>
+
+          <div class="stop-form-row">
+            <h2>Stop 4</h2>
+            <label class="field-label" for="stopName4">Stop name</label>
+            <input id="stopName4" name="stopName4" class="text-input" type="text" autocomplete="off">
+            <label class="field-label" for="stopId4">Stop ID</label>
+            <input id="stopId4" name="stopId4" class="text-input" type="text" autocomplete="off" spellcheck="false">
+          </div>
+
+          <div class="stop-form-row">
+            <h2>Stop 5</h2>
+            <label class="field-label" for="stopName5">Stop name</label>
+            <input id="stopName5" name="stopName5" class="text-input" type="text" autocomplete="off">
+            <label class="field-label" for="stopId5">Stop ID</label>
+            <input id="stopId5" name="stopId5" class="text-input" type="text" autocomplete="off" spellcheck="false">
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="button" type="submit">Save</button>
+          <button id="resetButton" class="button button-secondary" type="button">Clear all</button>
+        </div>
+      </form>
+
+      <p id="saveMessage" class="status status-subtle" aria-live="polite">Saved settings load here automatically.</p>
+    </section>
+  </main>
+
+  <script src="./settings.js"></script>
+</body>
+</html>
