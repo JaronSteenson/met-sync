@@ -1,7 +1,7 @@
 {
   "name": "Met-sync",
   "short_name": "Met-sync",
-  "description": "Fast mobile view of five saved Metlink stops.",
+  "description": "Fast mobile view of your saved Metlink stops.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

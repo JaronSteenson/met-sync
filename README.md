@@ -1,6 +1,6 @@
 # Met-sync
 
-Small static PWA for checking five favourite Wellington Metlink stops on a phone.
+Small static PWA for checking your favourite Wellington Metlink stops on a phone.
 
 Live site: https://jaronsteenson.github.io/met-sync/
 
@@ -23,15 +23,15 @@ Register for a Metlink Open Data API token at https://opendata.metlink.org.nz/ap
 
 1. Open `settings.html`.
 2. Paste your Metlink API key.
-3. Enter up to five stop names and stop IDs.
+3. Enter as many stop names and stop IDs as you like.
 4. Tap `Save`.
 5. Open `index.html` and tap `Refresh` if needed.
 
 Saved values live in `localStorage` using these keys:
 
 - `metlinkApiKey`
-- `metlinkStopName1` to `metlinkStopName5`
-- `metlinkStopId1` to `metlinkStopId5`
+- `metlinkStopName1`, `metlinkStopName2`, `metlinkStopName3`, ...
+- `metlinkStopId1`, `metlinkStopId2`, `metlinkStopId3`, ...
 
 ## Deploy to GitHub Pages
 

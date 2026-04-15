@@ -24,7 +24,7 @@
     </header>
 
     <section class="panel">
-      <p class="helper-text">Add your Metlink Open Data API token and your five favourite stop names and IDs. Get a token at <a href="https://opendata.metlink.org.nz/apis" target="_blank" rel="noreferrer">opendata.metlink.org.nz/apis</a>.</p>
+      <p class="helper-text">Add your Metlink Open Data API token and your favourite stop names and IDs. You can add, remove, and reorder stops here. Get a token at <a href="https://opendata.metlink.org.nz/apis" target="_blank" rel="noreferrer">opendata.metlink.org.nz/apis</a>.</p>
 
       <form id="settingsForm" class="settings-form">
         <div class="field-group">
@@ -32,47 +32,9 @@
           <input id="apiKey" name="apiKey" class="text-input" type="text" autocomplete="off" spellcheck="false">
         </div>
 
-        <div class="stops-fields">
-          <div class="stop-form-row">
-            <h2>Stop 1</h2>
-            <label class="field-label" for="stopName1">Stop name</label>
-            <input id="stopName1" name="stopName1" class="text-input" type="text" autocomplete="off">
-            <label class="field-label" for="stopId1">Stop ID</label>
-            <input id="stopId1" name="stopId1" class="text-input" type="text" autocomplete="off" spellcheck="false">
-          </div>
+        <div id="stopsFields" class="stops-fields"></div>
 
-          <div class="stop-form-row">
-            <h2>Stop 2</h2>
-            <label class="field-label" for="stopName2">Stop name</label>
-            <input id="stopName2" name="stopName2" class="text-input" type="text" autocomplete="off">
-            <label class="field-label" for="stopId2">Stop ID</label>
-            <input id="stopId2" name="stopId2" class="text-input" type="text" autocomplete="off" spellcheck="false">
-          </div>
-
-          <div class="stop-form-row">
-            <h2>Stop 3</h2>
-            <label class="field-label" for="stopName3">Stop name</label>
-            <input id="stopName3" name="stopName3" class="text-input" type="text" autocomplete="off">
-            <label class="field-label" for="stopId3">Stop ID</label>
-            <input id="stopId3" name="stopId3" class="text-input" type="text" autocomplete="off" spellcheck="false">
-          </div>
-
-          <div class="stop-form-row">
-            <h2>Stop 4</h2>
-            <label class="field-label" for="stopName4">Stop name</label>
-            <input id="stopName4" name="stopName4" class="text-input" type="text" autocomplete="off">
-            <label class="field-label" for="stopId4">Stop ID</label>
-            <input id="stopId4" name="stopId4" class="text-input" type="text" autocomplete="off" spellcheck="false">
-          </div>
-
-          <div class="stop-form-row">
-            <h2>Stop 5</h2>
-            <label class="field-label" for="stopName5">Stop name</label>
-            <input id="stopName5" name="stopName5" class="text-input" type="text" autocomplete="off">
-            <label class="field-label" for="stopId5">Stop ID</label>
-            <input id="stopId5" name="stopId5" class="text-input" type="text" autocomplete="off" spellcheck="false">
-          </div>
-        </div>
+        <button id="addStopButton" class="button button-secondary" type="button">Add stop</button>
 
         <div class="form-actions">
           <button class="button" type="submit">Save</button>

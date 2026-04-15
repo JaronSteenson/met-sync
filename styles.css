@@ -248,6 +248,28 @@ input {
   border-top: 1px solid var(--border);
 }
 
+.stop-form-header,
+.stop-form-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.stop-form-header {
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.stop-form-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.stop-action-button {
+  min-height: 2.35rem;
+  padding: 0.55rem 0.8rem;
+}
+
 .stop-form-row:first-child {
   padding-top: 0;
   border-top: 0;

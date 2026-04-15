@@ -4,7 +4,6 @@ const STORAGE_KEYS = {
   stopIdPrefix: 'metlinkStopId'
 };
 
-const MAX_STOPS = 5;
 const MAX_ARRIVALS = 2;
 const API_BASE_URL = 'https://api.opendata.metlink.org.nz/v1/stop-predictions';
 const NZ_TIMEZONE = 'Pacific/Auckland';
@@ -50,6 +49,22 @@ function registerServiceWorker() {
   }
 }
 
+function getStoredStopIndexes() {
+  const indexes = new Set();
+  const prefixPattern = new RegExp(`^(?:${STORAGE_KEYS.stopNamePrefix}|${STORAGE_KEYS.stopIdPrefix})(\\d+)$`);
+
+  for (let index = 0; index < localStorage.length; index += 1) {
+    const key = localStorage.key(index);
+    const match = key && key.match(prefixPattern);
+
+    if (match) {
+      indexes.add(Number.parseInt(match[1], 10));
+    }
+  }
+
+  return Array.from(indexes).filter(Number.isInteger).sort((left, right) => left - right);
+}
+
 function setSetupVisibility(isVisible) {
   setupMessage.hidden = !isVisible;
   setupMessage.style.display = isVisible ? '' : 'none';
@@ -60,7 +75,7 @@ function loadSettings() {
   const stops = [];
   let hasConfiguredStop = false;
 
-  for (let index = 1; index <= MAX_STOPS; index += 1) {
+  for (const index of getStoredStopIndexes()) {
     const name = getStoredValue(`${STORAGE_KEYS.stopNamePrefix}${index}`);
     const stopId = getStoredValue(`${STORAGE_KEYS.stopIdPrefix}${index}`);
 
