@@ -1,6 +1,6 @@
 const STORAGE_KEYS = {
   apiKey: 'metlinkApiKey',
-  stopFilter: 'metlinkStopFilter',
+  stopFilterPrefix: 'metlinkStopFilter',
   stopNamePrefix: 'metlinkStopName',
   stopIdPrefix: 'metlinkStopId'
 };
@@ -73,24 +73,24 @@ function setSetupVisibility(isVisible) {
 
 function loadSettings() {
   const apiKey = getStoredValue(STORAGE_KEYS.apiKey);
-  const stopFilter = getStoredValue(STORAGE_KEYS.stopFilter);
   const stops = [];
   let hasConfiguredStop = false;
 
   for (const index of getStoredStopIndexes()) {
     const name = getStoredValue(`${STORAGE_KEYS.stopNamePrefix}${index}`);
     const stopId = getStoredValue(`${STORAGE_KEYS.stopIdPrefix}${index}`);
+    const filter = getStoredValue(`${STORAGE_KEYS.stopFilterPrefix}${index}`);
 
     if (name || stopId) {
       hasConfiguredStop = true;
     }
 
     if (name && stopId) {
-      stops.push({ name, stopId });
+      stops.push({ name, stopId, filter });
     }
   }
 
-  return { apiKey, stopFilter, stops, hasConfiguredStop };
+  return { apiKey, stops, hasConfiguredStop };
 }
 
 function parseStopFilter(value) {
@@ -355,8 +355,7 @@ async function fetchStopArrivals(apiKey, stop) {
 }
 
 async function refreshStops() {
-  const { apiKey, stopFilter, stops, hasConfiguredStop } = loadSettings();
-  const stopFilters = parseStopFilter(stopFilter);
+  const { apiKey, stops, hasConfiguredStop } = loadSettings();
 
   setSetupVisibility(!(apiKey && hasConfiguredStop));
 
@@ -387,8 +386,9 @@ async function refreshStops() {
     }
   });
 
-  const results = (await Promise.all(requests))
-    .filter((result) => result.error || matchesStopFilter(getDisplayStopName(result.stop), stopFilters));
+  const allResults = await Promise.all(requests);
+  const results = allResults
+    .filter((result) => result.error || matchesStopFilter(getDisplayStopName(result.stop), parseStopFilter(result.stop.filter || '')));
 
   stopsContainer.innerHTML = results.map((result) => {
     if (result.error) {
@@ -403,21 +403,23 @@ async function refreshStops() {
   }).join('');
 
   const successCount = results.filter((result) => !result.error).length;
+  const errorCount = allResults.filter((result) => result.error).length;
+  const filteredCount = allResults.length - results.length - errorCount;
   const totalRequestCount = stops.length;
 
   if (successCount > 0) {
     lastUpdated.textContent = `Updated ${timestampFormatter.format(new Date())}`;
-    if (results.length === 0 && stopFilters.length > 0) {
-      setStatus('No stops matched the current filter.', 'status-error');
-    } else if (successCount === results.length && results.length === totalRequestCount) {
+    if (errorCount === 0 && filteredCount === 0) {
       setStatus('');
+    } else if (errorCount === 0 && filteredCount > 0) {
+      setStatus(`Loaded ${results.length} stop${results.length === 1 ? '' : 's'}. ${filteredCount} hidden by filters.`, 'status-error');
     } else if (results.length === 0 && totalRequestCount > 0) {
-      setStatus('No stops matched the current filter.', 'status-error');
+      setStatus('No stops matched their current filters.', 'status-error');
     } else {
       setStatus('Loaded with some stop errors.', 'status-error');
     }
-  } else if (results.length === 0 && stopFilters.length > 0) {
-    setStatus('No stops matched the current filter.', 'status-error');
+  } else if (results.length === 0 && totalRequestCount > 0) {
+    setStatus('No stops matched their current filters.', 'status-error');
     lastUpdated.textContent = `Updated ${timestampFormatter.format(new Date())}`;
   } else {
     setStatus('Could not load any stops. Check your API key and stop IDs.', 'status-error');

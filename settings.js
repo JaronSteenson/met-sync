@@ -1,6 +1,6 @@
 const STORAGE_KEYS = {
   apiKey: 'metlinkApiKey',
-  stopFilter: 'metlinkStopFilter',
+  stopFilterPrefix: 'metlinkStopFilter',
   stopNamePrefix: 'metlinkStopName',
   stopIdPrefix: 'metlinkStopId'
 };
@@ -87,6 +87,9 @@ function createStopRow(stop = {}) {
     <input class="text-input stop-name-input" type="text" autocomplete="off" value="${escapeAttribute(stop.name || '')}">
     <label class="field-label stop-id-label">Stop ID</label>
     <input class="text-input stop-id-input" type="text" autocomplete="off" spellcheck="false" value="${escapeAttribute(stop.stopId || '')}">
+    <label class="field-label stop-filter-label">Optional filter</label>
+    <input class="text-input stop-filter-input" type="text" autocomplete="off" spellcheck="false" placeholder="27, Well, Mell" value="${escapeAttribute(stop.filter || '')}">
+    <p class="helper-text">Optional comma-separated words or numbers. This stop only shows when the API stop name contains one of them.</p>
   `;
 
   return row;
@@ -106,7 +109,8 @@ function renderStoredStops() {
   const stopIndexes = getStoredStopIndexes();
   const stops = stopIndexes.map((index) => ({
     name: getStoredValue(`${STORAGE_KEYS.stopNamePrefix}${index}`),
-    stopId: getStoredValue(`${STORAGE_KEYS.stopIdPrefix}${index}`)
+    stopId: getStoredValue(`${STORAGE_KEYS.stopIdPrefix}${index}`),
+    filter: getStoredValue(`${STORAGE_KEYS.stopFilterPrefix}${index}`)
   }));
 
   stopsFields.innerHTML = '';
@@ -122,7 +126,8 @@ function renderStoredStops() {
 function getStopValues() {
   return getStopRows().map((row) => ({
     name: row.querySelector('.stop-name-input').value.trim(),
-    stopId: row.querySelector('.stop-id-input').value.trim()
+    stopId: row.querySelector('.stop-id-input').value.trim(),
+    filter: row.querySelector('.stop-filter-input').value.trim()
   }));
 }
 
@@ -138,7 +143,6 @@ function registerServiceWorker() {
 
 function loadSettings() {
   document.getElementById('apiKey').value = getStoredValue(STORAGE_KEYS.apiKey);
-  document.getElementById('stopFilter').value = getStoredValue(STORAGE_KEYS.stopFilter);
   renderStoredStops();
 }
 
@@ -149,18 +153,20 @@ function saveSettings(event) {
   const existingIndexes = getStoredStopIndexes();
 
   localStorage.setItem(STORAGE_KEYS.apiKey, document.getElementById('apiKey').value.trim());
-  localStorage.setItem(STORAGE_KEYS.stopFilter, document.getElementById('stopFilter').value.trim());
+  localStorage.removeItem('metlinkStopFilter');
 
   stops.forEach((stop, index) => {
     const keyIndex = index + 1;
     localStorage.setItem(`${STORAGE_KEYS.stopNamePrefix}${keyIndex}`, stop.name);
     localStorage.setItem(`${STORAGE_KEYS.stopIdPrefix}${keyIndex}`, stop.stopId);
+    localStorage.setItem(`${STORAGE_KEYS.stopFilterPrefix}${keyIndex}`, stop.filter);
   });
 
   existingIndexes.forEach((index) => {
     if (index > stops.length) {
       localStorage.removeItem(`${STORAGE_KEYS.stopNamePrefix}${index}`);
       localStorage.removeItem(`${STORAGE_KEYS.stopIdPrefix}${index}`);
+      localStorage.removeItem(`${STORAGE_KEYS.stopFilterPrefix}${index}`);
     }
   });
 
@@ -170,11 +176,12 @@ function saveSettings(event) {
 
 function clearSettings() {
   localStorage.removeItem(STORAGE_KEYS.apiKey);
-  localStorage.removeItem(STORAGE_KEYS.stopFilter);
+  localStorage.removeItem('metlinkStopFilter');
 
   getStoredStopIndexes().forEach((index) => {
     localStorage.removeItem(`${STORAGE_KEYS.stopNamePrefix}${index}`);
     localStorage.removeItem(`${STORAGE_KEYS.stopIdPrefix}${index}`);
+    localStorage.removeItem(`${STORAGE_KEYS.stopFilterPrefix}${index}`);
   });
 
   settingsForm.reset();
