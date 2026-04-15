@@ -23,16 +23,6 @@ const timeFormatter = new Intl.DateTimeFormat('en-NZ', {
   hour12: true
 });
 
-const timestampFormatter = new Intl.DateTimeFormat('en-NZ', {
-  timeZone: NZ_TIMEZONE,
-  hour: 'numeric',
-  minute: '2-digit',
-  second: '2-digit',
-  hour12: true,
-  day: 'numeric',
-  month: 'short'
-});
-
 function getStoredValue(key) {
   try {
     const value = localStorage.getItem(key);
@@ -173,6 +163,30 @@ function formatTime(value, fallbackText) {
   }
 
   return timeFormatter.format(date).replace(/\s?(am|pm)/i, (_, meridiem) => meridiem.toLowerCase());
+}
+
+function formatTimestamp(value) {
+  const date = value instanceof Date ? value : new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return 'Updated not yet';
+  }
+
+  const dateText = new Intl.DateTimeFormat('en-NZ', {
+    timeZone: NZ_TIMEZONE,
+    day: 'numeric',
+    month: 'short'
+  }).format(date);
+
+  const timeText = new Intl.DateTimeFormat('en-NZ', {
+    timeZone: NZ_TIMEZONE,
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  }).format(date).replace(/\s?(am|pm)/i, (_, meridiem) => meridiem.toLowerCase());
+
+  return `Updated ${dateText}, ${timeText}`;
 }
 
 function getServiceLabel(arrival) {
@@ -415,7 +429,7 @@ async function refreshStops() {
   const errorCount = results.filter((result) => result.error).length;
 
   if (successCount > 0) {
-    lastUpdated.textContent = `Updated ${timestampFormatter.format(new Date())}`;
+    lastUpdated.textContent = formatTimestamp(new Date());
     if (errorCount === 0) {
       setStatus('');
     } else {

@@ -77,7 +77,12 @@ input {
 .topbar-actions {
   flex-shrink: 0;
   display: flex;
+  align-items: center;
   gap: 0.55rem;
+}
+
+.topbar-actions > * + * {
+  margin-left: 0.55rem;
 }
 
 .panel,
@@ -93,12 +98,6 @@ input {
 
 .panel-tight {
   padding-bottom: 0.75rem;
-}
-
-.panel-status {
-  padding: 0;
-  background: transparent;
-  border: 0;
 }
 
 .button {
@@ -128,13 +127,16 @@ input {
 .icon-button {
   width: 2.75rem;
   min-width: 2.75rem;
+  height: 2.75rem;
   padding: 0;
+  line-height: 1;
 }
 
 .icon-svg {
   width: 1.2rem;
   height: 1.2rem;
   display: block;
+  fill: currentColor;
 }
 
 .status,
@@ -149,6 +151,10 @@ input {
   padding: 0.8rem 0.9rem;
   border-radius: 0.75rem;
   background: var(--panel-alt);
+}
+
+.status-floating {
+  margin-bottom: 0.9rem;
 }
 
 .meta-quiet {
