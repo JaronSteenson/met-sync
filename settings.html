@@ -32,6 +32,12 @@
           <input id="apiKey" name="apiKey" class="text-input" type="text" autocomplete="off" spellcheck="false">
         </div>
 
+        <div class="field-group">
+          <label class="field-label" for="stopFilter">Optional stop filter</label>
+          <input id="stopFilter" name="stopFilter" class="text-input" type="text" autocomplete="off" spellcheck="false" placeholder="27, Well, Mell">
+          <p class="helper-text">Optional comma-separated words or numbers. Cards only show when the API stop name contains one of them.</p>
+        </div>
+
         <div id="stopsFields" class="stops-fields"></div>
 
         <button id="addStopButton" class="button button-secondary" type="button">Add stop</button>

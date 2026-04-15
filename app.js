@@ -1,10 +1,11 @@
 const STORAGE_KEYS = {
   apiKey: 'metlinkApiKey',
+  stopFilter: 'metlinkStopFilter',
   stopNamePrefix: 'metlinkStopName',
   stopIdPrefix: 'metlinkStopId'
 };
 
-const MAX_ARRIVALS = 2;
+const MAX_ARRIVALS = 10;
 const API_BASE_URL = 'https://api.opendata.metlink.org.nz/v1/stop-predictions';
 const NZ_TIMEZONE = 'Pacific/Auckland';
 
@@ -72,6 +73,7 @@ function setSetupVisibility(isVisible) {
 
 function loadSettings() {
   const apiKey = getStoredValue(STORAGE_KEYS.apiKey);
+  const stopFilter = getStoredValue(STORAGE_KEYS.stopFilter);
   const stops = [];
   let hasConfiguredStop = false;
 
@@ -88,7 +90,14 @@ function loadSettings() {
     }
   }
 
-  return { apiKey, stops, hasConfiguredStop };
+  return { apiKey, stopFilter, stops, hasConfiguredStop };
+}
+
+function parseStopFilter(value) {
+  return value
+    .split(',')
+    .map((part) => part.trim().toLowerCase())
+    .filter(Boolean);
 }
 
 function getExpectedTime(arrival) {
@@ -193,12 +202,50 @@ function getServiceLabel(arrival) {
   return route || destination || 'Service';
 }
 
+function getApiStopName(payload) {
+  if (!payload || typeof payload !== 'object') {
+    return '';
+  }
+
+  const candidates = [
+    payload.stop_name,
+    payload.name,
+    payload.stop && payload.stop.name,
+    payload.stop && payload.stop.display_name,
+    payload.stop && payload.stop.title,
+    payload.data && payload.data.stop_name,
+    payload.data && payload.data.name,
+    payload.data && payload.data.stop && payload.data.stop.name
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string' && candidate.trim()) {
+      return candidate.trim();
+    }
+  }
+
+  return '';
+}
+
+function getDisplayStopName(stop) {
+  return stop.apiName || stop.name;
+}
+
+function matchesStopFilter(stopName, filters) {
+  if (filters.length === 0) {
+    return true;
+  }
+
+  const normalizedStopName = stopName.trim().toLowerCase();
+  return filters.some((filter) => normalizedStopName.includes(filter));
+}
+
 function renderEmptyStop(stop) {
   return `
     <article class="stop-card">
       <header class="stop-card-header">
         <div>
-          <h2 class="stop-card-title">${escapeHtml(stop.name)}</h2>
+          <h2 class="stop-card-title">${escapeHtml(getDisplayStopName(stop))}</h2>
           <p class="stop-card-subtitle">Stop ID ${escapeHtml(stop.stopId)}</p>
         </div>
       </header>
@@ -212,7 +259,7 @@ function renderErrorStop(stop, message) {
     <article class="stop-card">
       <header class="stop-card-header">
         <div>
-          <h2 class="stop-card-title">${escapeHtml(stop.name)}</h2>
+          <h2 class="stop-card-title">${escapeHtml(getDisplayStopName(stop))}</h2>
           <p class="stop-card-subtitle">Stop ID ${escapeHtml(stop.stopId)}</p>
         </div>
       </header>
@@ -242,7 +289,7 @@ function renderStop(stop, arrivals) {
     <article class="stop-card">
       <header class="stop-card-header">
         <div>
-          <h2 class="stop-card-title">${escapeHtml(stop.name)}</h2>
+          <h2 class="stop-card-title">${escapeHtml(getDisplayStopName(stop))}</h2>
           <p class="stop-card-subtitle">Stop ID ${escapeHtml(stop.stopId)}</p>
         </div>
       </header>
@@ -271,7 +318,7 @@ function escapeHtml(value) {
 }
 
 async function fetchStopArrivals(apiKey, stop) {
-  const url = `${API_BASE_URL}?stop_id=${encodeURIComponent(stop.stopId)}&limit=2`;
+  const url = `${API_BASE_URL}?stop_id=${encodeURIComponent(stop.stopId)}&limit=10`;
 
   const response = await fetch(url, {
     mode: 'cors',
@@ -301,11 +348,15 @@ async function fetchStopArrivals(apiKey, stop) {
     .sort((left, right) => getSortTime(left) - getSortTime(right))
     .slice(0, MAX_ARRIVALS);
 
-  return arrivals;
+  return {
+    apiName: getApiStopName(payload),
+    arrivals
+  };
 }
 
 async function refreshStops() {
-  const { apiKey, stops, hasConfiguredStop } = loadSettings();
+  const { apiKey, stopFilter, stops, hasConfiguredStop } = loadSettings();
+  const stopFilters = parseStopFilter(stopFilter);
 
   setSetupVisibility(!(apiKey && hasConfiguredStop));
 
@@ -322,14 +373,22 @@ async function refreshStops() {
 
   const requests = stops.map(async (stop) => {
     try {
-      const arrivals = await fetchStopArrivals(apiKey, stop);
-      return { stop, arrivals, error: null };
+      const result = await fetchStopArrivals(apiKey, stop);
+      return {
+        stop: {
+          ...stop,
+          apiName: result.apiName
+        },
+        arrivals: result.arrivals,
+        error: null
+      };
     } catch (error) {
       return { stop, arrivals: [], error: error instanceof Error ? error.message : 'Request failed' };
     }
   });
 
-  const results = await Promise.all(requests);
+  const results = (await Promise.all(requests))
+    .filter((result) => result.error || matchesStopFilter(getDisplayStopName(result.stop), stopFilters));
 
   stopsContainer.innerHTML = results.map((result) => {
     if (result.error) {
@@ -344,14 +403,22 @@ async function refreshStops() {
   }).join('');
 
   const successCount = results.filter((result) => !result.error).length;
+  const totalRequestCount = stops.length;
 
   if (successCount > 0) {
     lastUpdated.textContent = `Updated ${timestampFormatter.format(new Date())}`;
-    if (successCount === results.length) {
+    if (results.length === 0 && stopFilters.length > 0) {
+      setStatus('No stops matched the current filter.', 'status-error');
+    } else if (successCount === results.length && results.length === totalRequestCount) {
       setStatus('');
+    } else if (results.length === 0 && totalRequestCount > 0) {
+      setStatus('No stops matched the current filter.', 'status-error');
     } else {
       setStatus('Loaded with some stop errors.', 'status-error');
     }
+  } else if (results.length === 0 && stopFilters.length > 0) {
+    setStatus('No stops matched the current filter.', 'status-error');
+    lastUpdated.textContent = `Updated ${timestampFormatter.format(new Date())}`;
   } else {
     setStatus('Could not load any stops. Check your API key and stop IDs.', 'status-error');
   }

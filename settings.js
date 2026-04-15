@@ -1,5 +1,6 @@
 const STORAGE_KEYS = {
   apiKey: 'metlinkApiKey',
+  stopFilter: 'metlinkStopFilter',
   stopNamePrefix: 'metlinkStopName',
   stopIdPrefix: 'metlinkStopId'
 };
@@ -137,6 +138,7 @@ function registerServiceWorker() {
 
 function loadSettings() {
   document.getElementById('apiKey').value = getStoredValue(STORAGE_KEYS.apiKey);
+  document.getElementById('stopFilter').value = getStoredValue(STORAGE_KEYS.stopFilter);
   renderStoredStops();
 }
 
@@ -147,6 +149,7 @@ function saveSettings(event) {
   const existingIndexes = getStoredStopIndexes();
 
   localStorage.setItem(STORAGE_KEYS.apiKey, document.getElementById('apiKey').value.trim());
+  localStorage.setItem(STORAGE_KEYS.stopFilter, document.getElementById('stopFilter').value.trim());
 
   stops.forEach((stop, index) => {
     const keyIndex = index + 1;
@@ -167,6 +170,7 @@ function saveSettings(event) {
 
 function clearSettings() {
   localStorage.removeItem(STORAGE_KEYS.apiKey);
+  localStorage.removeItem(STORAGE_KEYS.stopFilter);
 
   getStoredStopIndexes().forEach((index) => {
     localStorage.removeItem(`${STORAGE_KEYS.stopNamePrefix}${index}`);
