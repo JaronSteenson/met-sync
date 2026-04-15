@@ -46,5 +46,74 @@ Use this response shape when updating parsing or rendering logic for `https://ap
 Important fields currently used by the app:
 
 - Stop display name: `departures[n].name`
-- Route/service label: `service_id`, `destination.name`, `trip_headsign`
+- Route/service label: `service_id`, `destination.name`
 - Times: `arrival.aimed`, `arrival.expected`, `departure.aimed`, `departure.expected`
+
+## Rail Departure Samples
+
+Use these rail departure examples to validate `service_id`, `destination.name`, and stop-name handling:
+
+```json
+[
+  {
+    "stop_id": "PETO1",
+    "service_id": "HVL",
+    "direction": "inbound",
+    "operator": "RAIL",
+    "origin": {
+      "stop_id": "UPPE",
+      "name": "UpperHuttStn"
+    },
+    "destination": {
+      "stop_id": "WELL1",
+      "name": "WELL-All stops"
+    },
+    "delay": "PT0S",
+    "vehicle_id": null,
+    "name": "PetoneStn",
+    "arrival": {
+      "aimed": "2026-04-16T05:03:00+12:00",
+      "expected": null
+    },
+    "departure": {
+      "aimed": "2026-04-16T05:03:00+12:00",
+      "expected": null
+    },
+    "status": null,
+    "monitored": false,
+    "wheelchair_accessible": true,
+    "trip_id": "HVL__1__2601__RAIL__Rail_MTuWThF-XHol_20260405",
+    "trip_headsign": "Wellington"
+  },
+  {
+    "stop_id": "PETO2",
+    "service_id": "HVL",
+    "direction": "outbound",
+    "operator": "RAIL",
+    "origin": {
+      "stop_id": "WELL1",
+      "name": "WgtnStn"
+    },
+    "destination": {
+      "stop_id": "UPPE",
+      "name": "UPPE - All stops"
+    },
+    "delay": "PT0S",
+    "vehicle_id": null,
+    "name": "PetoneStn",
+    "arrival": {
+      "aimed": "2026-04-16T06:02:00+12:00",
+      "expected": null
+    },
+    "departure": {
+      "aimed": "2026-04-16T06:02:00+12:00",
+      "expected": null
+    },
+    "status": null,
+    "monitored": false,
+    "wheelchair_accessible": true,
+    "trip_id": "HVL__0__2608__RAIL__Rail_MTuWThF-XHol_20260405",
+    "trip_headsign": "Upper Hutt"
+  }
+]
+```

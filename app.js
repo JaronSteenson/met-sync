@@ -178,22 +178,9 @@ function getServiceLabel(arrival) {
     return 'Service';
   }
 
-  const route = (
-    (arrival.route && arrival.route.short_name) ||
-    arrival.route_short_name ||
-    arrival.route_id ||
-    arrival.service_id ||
-    ''
-  ).toString().trim();
+  const route = (arrival.service_id || '').toString().trim();
 
-  const destination = (
-    (arrival.destination && arrival.destination.name) ||
-    arrival.trip_headsign ||
-    arrival.headsign ||
-    arrival.destination_name ||
-    arrival.direction_name ||
-    ''
-  ).toString().trim();
+  const destination = ((arrival.destination && arrival.destination.name) || '').toString().trim();
 
   if (route && destination) {
     return `${route} ${destination}`;
