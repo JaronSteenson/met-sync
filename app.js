@@ -5,7 +5,8 @@ const STORAGE_KEYS = {
   stopIdPrefix: 'metlinkStopId'
 };
 
-const MAX_ARRIVALS = 10;
+const API_LIMIT = 10;
+const MAX_ARRIVALS = 2;
 const API_BASE_URL = 'https://api.opendata.metlink.org.nz/v1/stop-predictions';
 const NZ_TIMEZONE = 'Pacific/Auckland';
 
@@ -218,13 +219,21 @@ function getDisplayStopName(stop) {
   return stop.apiName || stop.name;
 }
 
-function matchesStopFilter(stopName, filters) {
+function matchesArrivalFilter(arrival, filters) {
   if (filters.length === 0) {
     return true;
   }
 
-  const normalizedStopName = stopName.trim().toLowerCase();
-  return filters.some((filter) => normalizedStopName.includes(filter));
+  const serviceId = (arrival && arrival.service_id ? arrival.service_id : '').toString().trim().toLowerCase();
+  const destinationName = (
+    arrival &&
+    arrival.destination &&
+    arrival.destination.name
+      ? arrival.destination.name
+      : ''
+  ).toString().trim().toLowerCase();
+
+  return filters.some((filter) => serviceId.includes(filter) || destinationName.includes(filter));
 }
 
 function renderEmptyStop(stop) {
@@ -305,7 +314,7 @@ function escapeHtml(value) {
 }
 
 async function fetchStopArrivals(apiKey, stop) {
-  const url = `${API_BASE_URL}?stop_id=${encodeURIComponent(stop.stopId)}&limit=10`;
+  const url = `${API_BASE_URL}?stop_id=${encodeURIComponent(stop.stopId)}&limit=${API_LIMIT}`;
 
   const response = await fetch(url, {
     mode: 'cors',
@@ -332,8 +341,7 @@ async function fetchStopArrivals(apiKey, stop) {
   const payload = await response.json();
   const arrivals = getArrivalsFromPayload(payload)
     .slice()
-    .sort((left, right) => getSortTime(left) - getSortTime(right))
-    .slice(0, MAX_ARRIVALS);
+    .sort((left, right) => getSortTime(left) - getSortTime(right));
 
   return {
     apiName: getApiStopName(payload),
@@ -374,8 +382,21 @@ async function refreshStops() {
   });
 
   const allResults = await Promise.all(requests);
-  const results = allResults
-    .filter((result) => result.error || matchesStopFilter(getDisplayStopName(result.stop), parseStopFilter(result.stop.filter || '')));
+  const results = allResults.map((result) => {
+    if (result.error) {
+      return result;
+    }
+
+    const filters = parseStopFilter(result.stop.filter || '');
+    const arrivals = result.arrivals
+      .filter((arrival) => matchesArrivalFilter(arrival, filters))
+      .slice(0, MAX_ARRIVALS);
+
+    return {
+      ...result,
+      arrivals
+    };
+  });
 
   stopsContainer.innerHTML = results.map((result) => {
     if (result.error) {
@@ -390,24 +411,15 @@ async function refreshStops() {
   }).join('');
 
   const successCount = results.filter((result) => !result.error).length;
-  const errorCount = allResults.filter((result) => result.error).length;
-  const filteredCount = allResults.length - results.length - errorCount;
-  const totalRequestCount = stops.length;
+  const errorCount = results.filter((result) => result.error).length;
 
   if (successCount > 0) {
     lastUpdated.textContent = `Updated ${timestampFormatter.format(new Date())}`;
-    if (errorCount === 0 && filteredCount === 0) {
+    if (errorCount === 0) {
       setStatus('');
-    } else if (errorCount === 0 && filteredCount > 0) {
-      setStatus(`Loaded ${results.length} stop${results.length === 1 ? '' : 's'}. ${filteredCount} hidden by filters.`, 'status-error');
-    } else if (results.length === 0 && totalRequestCount > 0) {
-      setStatus('No stops matched their current filters.', 'status-error');
     } else {
       setStatus('Loaded with some stop errors.', 'status-error');
     }
-  } else if (results.length === 0 && totalRequestCount > 0) {
-    setStatus('No stops matched their current filters.', 'status-error');
-    lastUpdated.textContent = `Updated ${timestampFormatter.format(new Date())}`;
   } else {
     setStatus('Could not load any stops. Check your API key and stop IDs.', 'status-error');
   }
