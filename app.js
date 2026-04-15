@@ -27,6 +27,7 @@ const timestampFormatter = new Intl.DateTimeFormat('en-NZ', {
   timeZone: NZ_TIMEZONE,
   hour: 'numeric',
   minute: '2-digit',
+  second: '2-digit',
   hour12: true,
   day: 'numeric',
   month: 'short'

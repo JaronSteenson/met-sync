@@ -1,5 +1,9 @@
 # Met-sync Agent Notes
 
+## Service Worker Cache
+
+When changing any app shell asset in `APP_SHELL` such as `app.js`, `settings.js`, `styles.css`, `index.html`, `settings.html`, `manifest.json`, or icons, bump `CACHE_NAME` in [sw.js](/home/jason/Code/met-sync/sw.js) so deployed clients refresh cached assets.
+
 ## Metlink Stop Predictions Response
 
 Use this response shape when updating parsing or rendering logic for `https://api.opendata.metlink.org.nz/v1/stop-predictions`:

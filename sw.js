@@ -1,4 +1,4 @@
-const CACHE_NAME = 'metlink-quick-stops-v7';
+const CACHE_NAME = 'metlink-quick-stops-v8';
 const APP_SHELL = [
   './',
   './index.html',

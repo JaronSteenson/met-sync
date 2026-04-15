@@ -76,6 +76,8 @@ input {
 
 .topbar-actions {
   flex-shrink: 0;
+  display: flex;
+  gap: 0.55rem;
 }
 
 .panel,
@@ -93,12 +95,10 @@ input {
   padding-bottom: 0.75rem;
 }
 
-.toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
+.panel-status {
+  padding: 0;
+  background: transparent;
+  border: 0;
 }
 
 .button {
@@ -125,6 +125,18 @@ input {
   border-color: var(--border);
 }
 
+.icon-button {
+  width: 2.75rem;
+  min-width: 2.75rem;
+  padding: 0;
+}
+
+.icon-svg {
+  width: 1.2rem;
+  height: 1.2rem;
+  display: block;
+}
+
 .status,
 .helper-text,
 .meta {
@@ -137,6 +149,12 @@ input {
   padding: 0.8rem 0.9rem;
   border-radius: 0.75rem;
   background: var(--panel-alt);
+}
+
+.meta-quiet {
+  margin-top: 0.45rem;
+  font-size: 0.82rem;
+  line-height: 1.2;
 }
 
 .status-subtle {
