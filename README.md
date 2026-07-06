@@ -23,14 +23,16 @@ Register for a Metlink Open Data API token at https://opendata.metlink.org.nz/ap
 
 1. Open `settings.html`.
 2. Paste your Metlink API key.
-3. Enter as many stop names and stop IDs as you like.
-4. Optionally add a comma-separated filter for any stop.
-5. Tap `Save`.
-6. Open `index.html` and tap `Refresh` if needed.
+3. Choose how many rows to fetch and show for each stop.
+4. Enter as many stop names and stop IDs as you like.
+5. Optionally add a comma-separated filter for any stop.
+6. Settings auto-save as you edit. Use `Export JSON` and `Import JSON` to move a full backup between devices.
+7. Open `index.html`; arrivals refresh on load, every 10 seconds, and when you tap `Refresh`.
 
 Saved values live in `localStorage` using these keys:
 
 - `metlinkApiKey`
+- `metlinkRowsPerStop`
 - `metlinkStopFilter1`, `metlinkStopFilter2`, `metlinkStopFilter3`, ...
 - `metlinkStopName1`, `metlinkStopName2`, `metlinkStopName3`, ...
 - `metlinkStopId1`, `metlinkStopId2`, `metlinkStopId3`, ...

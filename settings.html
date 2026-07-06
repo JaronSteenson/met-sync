@@ -32,9 +32,21 @@
           <input id="apiKey" name="apiKey" class="text-input" type="text" autocomplete="off" spellcheck="false">
         </div>
 
+        <div class="field-group">
+          <label class="field-label" for="rowsPerStop">Rows per stop</label>
+          <input id="rowsPerStop" name="rowsPerStop" class="text-input" type="number" min="1" max="10" step="1" inputmode="numeric">
+          <p class="helper-text">How many upcoming departures to fetch and show for each stop.</p>
+        </div>
+
         <div id="stopsFields" class="stops-fields"></div>
 
         <button id="addStopButton" class="button button-secondary" type="button">Add stop</button>
+
+        <div class="form-actions">
+          <button id="exportButton" class="button button-secondary" type="button">Export JSON</button>
+          <button id="importButton" class="button button-secondary" type="button">Import JSON</button>
+        </div>
+        <input id="importFileInput" class="visually-hidden" type="file" accept="application/json,.json">
 
         <div class="form-actions">
           <button class="button" type="submit">Save</button>

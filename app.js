@@ -1,12 +1,15 @@
 const STORAGE_KEYS = {
   apiKey: 'metlinkApiKey',
+  rowsPerStop: 'metlinkRowsPerStop',
   stopFilterPrefix: 'metlinkStopFilter',
   stopNamePrefix: 'metlinkStopName',
   stopIdPrefix: 'metlinkStopId'
 };
 
-const API_LIMIT = 10;
-const MAX_ARRIVALS = 2;
+const DEFAULT_ROWS_PER_STOP = 2;
+const MIN_ROWS_PER_STOP = 1;
+const MAX_ROWS_PER_STOP = 10;
+const AUTO_REFRESH_INTERVAL_MS = 10000;
 const API_BASE_URL = 'https://api.opendata.metlink.org.nz/v1/stop-predictions';
 const NZ_TIMEZONE = 'Pacific/Auckland';
 
@@ -15,6 +18,7 @@ const statusMessage = document.getElementById('statusMessage');
 const lastUpdated = document.getElementById('lastUpdated');
 const stopsContainer = document.getElementById('stopsContainer');
 const setupMessage = document.getElementById('setupMessage');
+let refreshInProgress = false;
 
 const timeFormatter = new Intl.DateTimeFormat('en-NZ', {
   timeZone: NZ_TIMEZONE,
@@ -30,6 +34,16 @@ function getStoredValue(key) {
   } catch (_error) {
     return '';
   }
+}
+
+function normalizeRowsPerStop(value) {
+  const parsed = Number.parseInt(value, 10);
+
+  if (!Number.isInteger(parsed)) {
+    return DEFAULT_ROWS_PER_STOP;
+  }
+
+  return Math.min(MAX_ROWS_PER_STOP, Math.max(MIN_ROWS_PER_STOP, parsed));
 }
 
 function registerServiceWorker() {
@@ -65,6 +79,7 @@ function setSetupVisibility(isVisible) {
 
 function loadSettings() {
   const apiKey = getStoredValue(STORAGE_KEYS.apiKey);
+  const rowsPerStop = normalizeRowsPerStop(getStoredValue(STORAGE_KEYS.rowsPerStop));
   const stops = [];
   let hasConfiguredStop = false;
 
@@ -82,7 +97,7 @@ function loadSettings() {
     }
   }
 
-  return { apiKey, stops, hasConfiguredStop };
+  return { apiKey, rowsPerStop, stops, hasConfiguredStop };
 }
 
 function parseStopFilter(value) {
@@ -328,8 +343,8 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
-async function fetchStopArrivals(apiKey, stop) {
-  const url = `${API_BASE_URL}?stop_id=${encodeURIComponent(stop.stopId)}&limit=${API_LIMIT}`;
+async function fetchStopArrivals(apiKey, stop, rowsPerStop) {
+  const url = `${API_BASE_URL}?stop_id=${encodeURIComponent(stop.stopId)}&limit=${rowsPerStop}`;
 
   const response = await fetch(url, {
     mode: 'cors',
@@ -365,91 +380,109 @@ async function fetchStopArrivals(apiKey, stop) {
 }
 
 async function refreshStops() {
-  const { apiKey, stops, hasConfiguredStop } = loadSettings();
-
-  setSetupVisibility(!(apiKey && hasConfiguredStop));
-
-  if (!apiKey || stops.length === 0) {
-    stopsContainer.innerHTML = '';
-    refreshButton.disabled = true;
-    setStatus('Add your API key and at least one stop in Settings.', 'status-error');
-    lastUpdated.textContent = 'Updated not yet';
+  if (refreshInProgress) {
     return;
   }
 
-  refreshButton.disabled = true;
-  setStatus('Refreshing…');
+  refreshInProgress = true;
+  let shouldEnableRefresh = false;
 
-  const requests = stops.map(async (stop) => {
-    try {
-      const result = await fetchStopArrivals(apiKey, stop);
+  try {
+    const { apiKey, rowsPerStop, stops, hasConfiguredStop } = loadSettings();
+
+    setSetupVisibility(!(apiKey && hasConfiguredStop));
+
+    if (!apiKey || stops.length === 0) {
+      stopsContainer.innerHTML = '';
+      refreshButton.disabled = true;
+      setStatus('Add your API key and at least one stop in Settings.', 'status-error');
+      lastUpdated.textContent = 'Updated not yet';
+      return;
+    }
+
+    shouldEnableRefresh = true;
+    refreshButton.disabled = true;
+    setStatus('Refreshing…');
+
+    const requests = stops.map(async (stop) => {
+      try {
+        const result = await fetchStopArrivals(apiKey, stop, rowsPerStop);
+        return {
+          stop: {
+            ...stop,
+            apiName: result.apiName
+          },
+          arrivals: result.arrivals,
+          error: null
+        };
+      } catch (error) {
+        return { stop, arrivals: [], error: error instanceof Error ? error.message : 'Request failed' };
+      }
+    });
+
+    const allResults = await Promise.all(requests);
+    const results = allResults.map((result) => {
+      if (result.error) {
+        return result;
+      }
+
+      const filters = parseStopFilter(result.stop.filter || '');
+      const arrivals = result.arrivals
+        .filter((arrival) => matchesArrivalFilter(arrival, filters))
+        .slice(0, rowsPerStop);
+
       return {
-        stop: {
-          ...stop,
-          apiName: result.apiName
-        },
-        arrivals: result.arrivals,
-        error: null
+        ...result,
+        arrivals
       };
-    } catch (error) {
-      return { stop, arrivals: [], error: error instanceof Error ? error.message : 'Request failed' };
-    }
-  });
+    });
 
-  const allResults = await Promise.all(requests);
-  const results = allResults.map((result) => {
-    if (result.error) {
-      return result;
-    }
+    stopsContainer.innerHTML = results.map((result) => {
+      if (result.error) {
+        return renderErrorStop(result.stop, result.error);
+      }
 
-    const filters = parseStopFilter(result.stop.filter || '');
-    const arrivals = result.arrivals
-      .filter((arrival) => matchesArrivalFilter(arrival, filters))
-      .slice(0, MAX_ARRIVALS);
+      if (result.arrivals.length === 0) {
+        return renderEmptyStop(result.stop);
+      }
 
-    return {
-      ...result,
-      arrivals
-    };
-  });
+      return renderStop(result.stop, result.arrivals);
+    }).join('');
 
-  stopsContainer.innerHTML = results.map((result) => {
-    if (result.error) {
-      return renderErrorStop(result.stop, result.error);
-    }
+    const successCount = results.filter((result) => !result.error).length;
+    const errorCount = results.filter((result) => result.error).length;
 
-    if (result.arrivals.length === 0) {
-      return renderEmptyStop(result.stop);
-    }
-
-    return renderStop(result.stop, result.arrivals);
-  }).join('');
-
-  const successCount = results.filter((result) => !result.error).length;
-  const errorCount = results.filter((result) => result.error).length;
-
-  if (successCount > 0) {
-    lastUpdated.textContent = formatTimestamp(new Date());
-    if (errorCount === 0) {
-      setStatus('');
+    if (successCount > 0) {
+      lastUpdated.textContent = formatTimestamp(new Date());
+      if (errorCount === 0) {
+        setStatus('');
+      } else {
+        setStatus('Loaded with some stop errors.', 'status-error');
+      }
     } else {
-      setStatus('Loaded with some stop errors.', 'status-error');
+      setStatus('Could not load any stops. Check your API key and stop IDs.', 'status-error');
     }
-  } else {
-    setStatus('Could not load any stops. Check your API key and stop IDs.', 'status-error');
+  } finally {
+    refreshInProgress = false;
+    if (shouldEnableRefresh) {
+      refreshButton.disabled = false;
+    }
   }
-
-  refreshButton.disabled = false;
 }
 
 refreshButton.addEventListener('click', () => {
-  refreshStops();
+  refreshStops().catch(handleRefreshError);
 });
 
-registerServiceWorker();
-refreshStops().catch(() => {
+function handleRefreshError() {
   setStatus('The page could not start. Open Settings and save again, then retry.', 'status-error');
   lastUpdated.textContent = 'Updated not yet';
   setSetupVisibility(true);
   refreshButton.disabled = false;
-});
+}
+
+registerServiceWorker();
+refreshStops().catch(handleRefreshError);
+window.setInterval(() => {
+  refreshStops().catch(handleRefreshError);
+}, AUTO_REFRESH_INTERVAL_MS);

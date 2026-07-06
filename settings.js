@@ -1,15 +1,26 @@
 const STORAGE_KEYS = {
   apiKey: 'metlinkApiKey',
+  rowsPerStop: 'metlinkRowsPerStop',
   stopFilterPrefix: 'metlinkStopFilter',
   stopNamePrefix: 'metlinkStopName',
   stopIdPrefix: 'metlinkStopId'
 };
+
+const DEFAULT_ROWS_PER_STOP = 2;
+const MIN_ROWS_PER_STOP = 1;
+const MAX_ROWS_PER_STOP = 10;
+const AUTO_SAVE_DELAY_MS = 400;
+const EXPORT_VERSION = 1;
 
 const settingsForm = document.getElementById('settingsForm');
 const saveMessage = document.getElementById('saveMessage');
 const resetButton = document.getElementById('resetButton');
 const stopsFields = document.getElementById('stopsFields');
 const addStopButton = document.getElementById('addStopButton');
+const exportButton = document.getElementById('exportButton');
+const importButton = document.getElementById('importButton');
+const importFileInput = document.getElementById('importFileInput');
+let autoSaveTimer = null;
 
 function escapeAttribute(value) {
   return String(value)
@@ -26,6 +37,16 @@ function getStoredValue(key) {
   } catch (_error) {
     return '';
   }
+}
+
+function normalizeRowsPerStop(value) {
+  const parsed = Number.parseInt(value, 10);
+
+  if (!Number.isInteger(parsed)) {
+    return DEFAULT_ROWS_PER_STOP;
+  }
+
+  return Math.min(MAX_ROWS_PER_STOP, Math.max(MIN_ROWS_PER_STOP, parsed));
 }
 
 function getStoredStopIndexes() {
@@ -143,19 +164,30 @@ function registerServiceWorker() {
 
 function loadSettings() {
   document.getElementById('apiKey').value = getStoredValue(STORAGE_KEYS.apiKey);
+  document.getElementById('rowsPerStop').value = normalizeRowsPerStop(getStoredValue(STORAGE_KEYS.rowsPerStop));
   renderStoredStops();
 }
 
-function saveSettings(event) {
-  event.preventDefault();
+function getCurrentSettings() {
+  return {
+    apiKey: document.getElementById('apiKey').value.trim(),
+    rowsPerStop: normalizeRowsPerStop(document.getElementById('rowsPerStop').value),
+    stops: getStopValues()
+  };
+}
 
-  const stops = getStopValues();
+function saveCurrentSettings(message = 'Saved. Return to the main page to refresh arrivals.') {
+  window.clearTimeout(autoSaveTimer);
+  autoSaveTimer = null;
+
+  const settings = getCurrentSettings();
   const existingIndexes = getStoredStopIndexes();
 
-  localStorage.setItem(STORAGE_KEYS.apiKey, document.getElementById('apiKey').value.trim());
+  localStorage.setItem(STORAGE_KEYS.apiKey, settings.apiKey);
+  localStorage.setItem(STORAGE_KEYS.rowsPerStop, String(settings.rowsPerStop));
   localStorage.removeItem('metlinkStopFilter');
 
-  stops.forEach((stop, index) => {
+  settings.stops.forEach((stop, index) => {
     const keyIndex = index + 1;
     localStorage.setItem(`${STORAGE_KEYS.stopNamePrefix}${keyIndex}`, stop.name);
     localStorage.setItem(`${STORAGE_KEYS.stopIdPrefix}${keyIndex}`, stop.stopId);
@@ -163,19 +195,34 @@ function saveSettings(event) {
   });
 
   existingIndexes.forEach((index) => {
-    if (index > stops.length) {
+    if (index > settings.stops.length) {
       localStorage.removeItem(`${STORAGE_KEYS.stopNamePrefix}${index}`);
       localStorage.removeItem(`${STORAGE_KEYS.stopIdPrefix}${index}`);
       localStorage.removeItem(`${STORAGE_KEYS.stopFilterPrefix}${index}`);
     }
   });
 
-  saveMessage.textContent = 'Saved. Return to the main page to refresh arrivals.';
+  saveMessage.textContent = message;
   saveMessage.className = 'status status-subtle status-ok';
+
+  return settings;
+}
+
+function saveSettings(event) {
+  event.preventDefault();
+  saveCurrentSettings();
+}
+
+function queueAutoSave() {
+  window.clearTimeout(autoSaveTimer);
+  autoSaveTimer = window.setTimeout(() => {
+    saveCurrentSettings('Auto-saved.');
+  }, AUTO_SAVE_DELAY_MS);
 }
 
 function clearSettings() {
   localStorage.removeItem(STORAGE_KEYS.apiKey);
+  localStorage.removeItem(STORAGE_KEYS.rowsPerStop);
   localStorage.removeItem('metlinkStopFilter');
 
   getStoredStopIndexes().forEach((index) => {
@@ -185,9 +232,106 @@ function clearSettings() {
   });
 
   settingsForm.reset();
+  document.getElementById('rowsPerStop').value = DEFAULT_ROWS_PER_STOP;
   renderStoredStops();
   saveMessage.textContent = 'Cleared all saved settings.';
   saveMessage.className = 'status status-subtle';
+}
+
+function getExportPayload() {
+  const settings = saveCurrentSettings('Saved and exported.');
+
+  return {
+    version: EXPORT_VERSION,
+    exportedAt: new Date().toISOString(),
+    settings
+  };
+}
+
+function downloadSettingsJson() {
+  const payload = getExportPayload();
+  const blob = new Blob([`${JSON.stringify(payload, null, 2)}\n`], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+
+  link.href = url;
+  link.download = 'met-sync-settings.json';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function getImportString(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function normalizeImportedSettings(payload) {
+  if (!payload || typeof payload !== 'object' || payload.version !== EXPORT_VERSION) {
+    throw new Error('Import file must be a Met-sync settings export.');
+  }
+
+  const settings = payload.settings;
+  if (!settings || typeof settings !== 'object') {
+    throw new Error('Import file is missing settings.');
+  }
+
+  if (!Array.isArray(settings.stops)) {
+    throw new Error('Import file is missing saved stops.');
+  }
+
+  return {
+    apiKey: getImportString(settings.apiKey),
+    rowsPerStop: normalizeRowsPerStop(settings.rowsPerStop),
+    stops: settings.stops.map((stop) => {
+      if (!stop || typeof stop !== 'object') {
+        return { name: '', stopId: '', filter: '' };
+      }
+
+      return {
+        name: getImportString(stop.name),
+        stopId: getImportString(stop.stopId),
+        filter: getImportString(stop.filter)
+      };
+    })
+  };
+}
+
+function applyImportedSettings(settings) {
+  localStorage.setItem(STORAGE_KEYS.apiKey, settings.apiKey);
+  localStorage.setItem(STORAGE_KEYS.rowsPerStop, String(settings.rowsPerStop));
+  localStorage.removeItem('metlinkStopFilter');
+
+  getStoredStopIndexes().forEach((index) => {
+    localStorage.removeItem(`${STORAGE_KEYS.stopNamePrefix}${index}`);
+    localStorage.removeItem(`${STORAGE_KEYS.stopIdPrefix}${index}`);
+    localStorage.removeItem(`${STORAGE_KEYS.stopFilterPrefix}${index}`);
+  });
+
+  settings.stops.forEach((stop, index) => {
+    const keyIndex = index + 1;
+    localStorage.setItem(`${STORAGE_KEYS.stopNamePrefix}${keyIndex}`, stop.name);
+    localStorage.setItem(`${STORAGE_KEYS.stopIdPrefix}${keyIndex}`, stop.stopId);
+    localStorage.setItem(`${STORAGE_KEYS.stopFilterPrefix}${keyIndex}`, stop.filter);
+  });
+
+  loadSettings();
+  saveMessage.textContent = 'Imported settings.';
+  saveMessage.className = 'status status-subtle status-ok';
+}
+
+async function importSettingsFile(file) {
+  if (!file) {
+    return;
+  }
+
+  try {
+    const payload = JSON.parse(await file.text());
+    applyImportedSettings(normalizeImportedSettings(payload));
+  } catch (error) {
+    saveMessage.textContent = error instanceof Error ? error.message : 'Could not import settings.';
+    saveMessage.className = 'status status-subtle status-error';
+  }
 }
 
 stopsFields.addEventListener('click', (event) => {
@@ -207,6 +351,7 @@ stopsFields.addEventListener('click', (event) => {
     if (previousRow) {
       stopsFields.insertBefore(row, previousRow);
       updateStopRowControls();
+      saveCurrentSettings('Auto-saved.');
     }
   }
 
@@ -215,19 +360,35 @@ stopsFields.addEventListener('click', (event) => {
     if (nextRow) {
       stopsFields.insertBefore(nextRow, row);
       updateStopRowControls();
+      saveCurrentSettings('Auto-saved.');
     }
   }
 
   if (button.classList.contains('remove-stop-button') && getStopRows().length > 1) {
     row.remove();
     updateStopRowControls();
+    saveCurrentSettings('Auto-saved.');
   }
 });
 
 addStopButton.addEventListener('click', () => {
   addStopRow({}, true);
+  saveCurrentSettings('Auto-saved.');
 });
 
+exportButton.addEventListener('click', downloadSettingsJson);
+importButton.addEventListener('click', () => {
+  importFileInput.click();
+});
+
+importFileInput.addEventListener('change', () => {
+  const file = importFileInput.files && importFileInput.files[0];
+  importSettingsFile(file).finally(() => {
+    importFileInput.value = '';
+  });
+});
+
+settingsForm.addEventListener('input', queueAutoSave);
 settingsForm.addEventListener('submit', saveSettings);
 resetButton.addEventListener('click', clearSettings);
 
