@@ -6,9 +6,10 @@ const STORAGE_KEYS = {
   stopIdPrefix: 'metlinkStopId'
 };
 
-const DEFAULT_ROWS_PER_STOP = 10;
+const DEFAULT_ROWS_PER_STOP = 2;
 const MIN_ROWS_PER_STOP = 1;
 const MAX_ROWS_PER_STOP = 10;
+const API_FETCH_LIMIT = 10;
 const AUTO_REFRESH_INTERVAL_MS = 10000;
 const API_BASE_URL = 'https://api.opendata.metlink.org.nz/v1/stop-predictions';
 const NZ_TIMEZONE = 'Pacific/Auckland';
@@ -343,8 +344,8 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
-async function fetchStopArrivals(apiKey, stop, rowsPerStop) {
-  const url = `${API_BASE_URL}?stop_id=${encodeURIComponent(stop.stopId)}&limit=${rowsPerStop}`;
+async function fetchStopArrivals(apiKey, stop) {
+  const url = `${API_BASE_URL}?stop_id=${encodeURIComponent(stop.stopId)}&limit=${API_FETCH_LIMIT}`;
 
   const response = await fetch(url, {
     mode: 'cors',
@@ -406,7 +407,7 @@ async function refreshStops() {
 
     const requests = stops.map(async (stop) => {
       try {
-        const result = await fetchStopArrivals(apiKey, stop, rowsPerStop);
+        const result = await fetchStopArrivals(apiKey, stop);
         return {
           stop: {
             ...stop,
