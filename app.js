@@ -6,7 +6,7 @@ const STORAGE_KEYS = {
   stopIdPrefix: 'metlinkStopId'
 };
 
-const DEFAULT_ROWS_PER_STOP = 2;
+const DEFAULT_ROWS_PER_STOP = 10;
 const MIN_ROWS_PER_STOP = 1;
 const MAX_ROWS_PER_STOP = 10;
 const AUTO_REFRESH_INTERVAL_MS = 10000;
