@@ -8,8 +8,8 @@ const STORAGE_KEYS = {
 
 const DEFAULT_ROWS_PER_STOP = 2;
 const MIN_ROWS_PER_STOP = 1;
-const MAX_ROWS_PER_STOP = 10;
-const API_FETCH_LIMIT = 10;
+const MAX_ROWS_PER_STOP = 30;
+const API_FETCH_LIMIT = 30;
 const AUTO_REFRESH_INTERVAL_MS = 10000;
 const API_BASE_URL = 'https://api.opendata.metlink.org.nz/v1/stop-predictions';
 const NZ_TIMEZONE = 'Pacific/Auckland';
